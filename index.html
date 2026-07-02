@@ -348,6 +348,7 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
   <div class="htools">
     <button class="btn" id="septBtn" title="Recentrer sur septembre"><span class="ic">🍁</span><span class="lbl">Septembre</span></button>
     <button class="btn" id="shinkBtn" title="Afficher les lignes de Shinkansen"><span class="ic">🚄</span><span class="lbl">Shinkansen</span></button>
+    <button class="btn" id="satBtn" title="Basculer en vue satellite"><span class="ic">🛰️</span><span class="lbl">Satellite</span></button>
     <button class="btn" id="favBtn" title="Mes favoris &amp; itinéraire"><span class="ic">❤</span><span class="lbl">Favoris</span><span class="fav-count" id="favCount"></span></button>
     <button class="btn" id="regBtn"><span class="ic">🗺️</span><span class="lbl">Régions</span></button>
     <button class="btn icon" id="infoBtn" title="À propos"><span class="ic">ⓘ</span></button>
@@ -16219,19 +16220,41 @@ function init(){
   const showFallback = () => { if(!tilesOK && !fallbackShown){ fallbackLayer.addTo(map); fallbackShown = true; } };
   const hideFallback = () => { tilesOK = true; if(fallbackShown){ map.removeLayer(fallbackLayer); fallbackShown = false; } };
 
-  // Vraies tuiles (villes, reliefs, préfectures)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  // Fonds de carte : plan (Voyager, par défaut) et satellite (Esri World Imagery)
+  const baseVoyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     subdomains:'abcd', maxZoom:20, errorTileUrl: BLANK_TILE,
     attribution:'© OpenStreetMap · © CARTO'
-  }).addTo(map);
+  });
+  const baseSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom:19, errorTileUrl: BLANK_TILE,
+    attribution:'© Esri, Maxar, Earthstar Geographics'
+  });
+  let baseIsSat = false;
+  baseVoyager.addTo(map);
 
-  // Test d'accès aux tuiles : si OK → aucun fond vectoriel (fini la superposition) ;
+  // Test d'accès aux tuiles du fond actif : si OK → aucun fond vectoriel (fini la superposition) ;
   // si elles sont bloquées (aperçu) → on affiche les îles en secours.
-  const probe = new Image();
-  probe.onload = hideFallback;
-  probe.onerror = showFallback;
-  probe.src = 'https://a.basemaps.cartocdn.com/rastertiles/voyager/4/14/6.png';
-  setTimeout(() => { if(!tilesOK) showFallback(); }, 1600);
+  function probeBase(sampleUrl){
+    tilesOK = false;
+    const probe = new Image();
+    probe.onload = hideFallback;
+    probe.onerror = showFallback;
+    probe.src = sampleUrl;
+    setTimeout(() => { if(!tilesOK) showFallback(); }, 1600);
+  }
+  probeBase('https://a.basemaps.cartocdn.com/rastertiles/voyager/4/14/6.png');
+
+  // Bascule plan / satellite
+  document.getElementById('satBtn').onclick = (e) => {
+    baseIsSat = !baseIsSat;
+    map.removeLayer(baseIsSat ? baseVoyager : baseSatellite);
+    (baseIsSat ? baseSatellite : baseVoyager).addTo(map);
+    if(fallbackShown){ map.removeLayer(fallbackLayer); fallbackShown = false; }
+    e.currentTarget.classList.toggle('active', baseIsSat);
+    probeBase(baseIsSat
+      ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/4/6/14'
+      : 'https://a.basemaps.cartocdn.com/rastertiles/voyager/4/14/6.png');
+  };
 
   map.attributionControl.setPrefix(false);
   map.attributionControl.setPosition('bottomleft');
