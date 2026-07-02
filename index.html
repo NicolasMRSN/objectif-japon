@@ -209,6 +209,7 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
 .start{border:none;cursor:pointer;border-radius:16px;padding:16px 30px;font-family:var(--sans);font-size:16px;font-weight:700;color:#fff;
   background:linear-gradient(135deg,#E5556E,#C84B86);box-shadow:0 12px 28px rgba(200,75,134,.4);transition:transform .14s,box-shadow .2s}
 .start:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(200,75,134,.5)}
+.petals-layer{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;border-radius:inherit}
 .petal{position:absolute;top:-24px;font-size:16px;opacity:.85;pointer-events:none;animation:fall linear infinite;z-index:0}
 @keyframes fall{0%{transform:translateY(-30px) rotate(0);opacity:0}10%{opacity:.85}100%{transform:translateY(115vh) rotate(360deg);opacity:0}}
 
@@ -402,6 +403,7 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
 
 <div class="welcome" id="welcome">
   <div class="card" id="wCard">
+    <div class="petals-layer" id="petalsLayer"></div>
     <div class="crest">✿ ❀ ✿</div>
     <h1>Marine &amp; Arnaud</h1>
     <div class="tag">votre voyage de noces au Japon</div>
@@ -16761,7 +16763,7 @@ document.getElementById('infoBtn').onclick = () => {
 };
 
 (function petals(){
-  const card = document.getElementById('wCard');
+  const card = document.getElementById('petalsLayer');
   const glyphs = ['🌸','❀','🌸','✿','🌸'];
   for(let i=0;i<14;i++){
     const p = document.createElement('div');
