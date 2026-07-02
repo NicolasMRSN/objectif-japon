@@ -16583,8 +16583,12 @@ let syncSaveTimer = null;
 let applyingRemote = false; // évite de renvoyer en boucle un changement qu'on vient de recevoir du serveur
 
 if(SYNC_ENABLED && typeof supabase !== 'undefined'){
-  try{ sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }catch(e){ sb = null; }
+  try{ sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
+  catch(e){ sb = null; console.error('[sync] échec création du client Supabase :', e); }
+} else if(SYNC_ENABLED){
+  console.warn('[sync] SYNC_ENABLED=true mais window.supabase est indéfini (la librairie supabase-js ne s\'est pas chargée).');
 }
+console.log('[sync] activé :', SYNC_ENABLED, '| client prêt :', !!sb);
 
 function applyRemoteFav(payload){
   if(!payload || !Array.isArray(payload.order)) return;
@@ -16604,8 +16608,10 @@ async function pullFavFromCloud(){
   if(!sb) return;
   try{
     const { data, error } = await sb.from('favorites').select('data, updated_at').eq('id', FAV_ROW_ID).maybeSingle();
-    if(!error && data) applyRemoteFav(data.data);
-  }catch(e){ /* hors-ligne ou service indisponible : on garde la copie locale */ }
+    if(error){ console.error('[sync] échec de la récupération initiale :', error); return; }
+    if(data){ console.log('[sync] favoris distants récupérés ✓'); applyRemoteFav(data.data); }
+    else console.log('[sync] aucune ligne distante pour le moment (normal si aucun favori n\'a jamais été envoyé).');
+  }catch(e){ console.error('[sync] erreur réseau lors de la récupération :', e); }
 }
 
 function pushFavToCloud(){
@@ -16616,7 +16622,10 @@ function pushFavToCloud(){
       id: FAV_ROW_ID,
       data: { order: favOrder, map: favMap },
       updated_at: new Date().toISOString()
-    }).then(({error}) => { /* si hors-ligne : échoue silencieusement, sera renvoyé au prochain changement */ });
+    }).then(({error}) => {
+      if(error) console.error('[sync] échec de l\'envoi des favoris :', error);
+      else console.log('[sync] favoris envoyés ✓');
+    });
   }, 600);
 }
 
@@ -16626,7 +16635,10 @@ function subscribeFavRealtime(){
     .on('postgres_changes',
       { event: '*', schema: 'public', table: 'favorites', filter: `id=eq.${FAV_ROW_ID}` },
       (payload) => { if(payload.new && payload.new.data) applyRemoteFav(payload.new.data); })
-    .subscribe();
+    .subscribe((status, err) => {
+      if(err) console.error('[sync] échec de l\'abonnement temps réel :', err);
+      else console.log('[sync] statut du canal temps réel :', status);
+    });
 }
 
 function placeId(p){ return (p.n||'') + '@' + (+p.lat).toFixed(4) + ',' + (+p.lng).toFixed(4); }
