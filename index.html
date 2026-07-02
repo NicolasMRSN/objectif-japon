@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Marine & Arnaud · Lune de miel au Japon</title>
+<meta name="description" content="Carte interactive du voyage de noces de Marine & Arnaud au Japon.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#C84B86">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Japon ✿">
 <style>
 :root{
   --cream:#FBF6F0; --ink:#2B2A3D; --ink-soft:#5C5A72;
@@ -169,7 +177,15 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
 .d-note{margin-top:14px;padding:13px 15px;border-radius:14px;font-size:13.5px;line-height:1.55;display:flex;gap:9px;align-items:flex-start}
 .d-note.tip{background:rgba(201,162,39,.12);color:#7a5f12}
 .d-note.date{background:rgba(255,71,126,.1);color:#a32457}
+.d-note.addr{background:rgba(91,95,151,.09);color:#3c3a52;align-items:center}
 .d-note .ic{font-size:15px;flex:0 0 auto;margin-top:1px}
+.d-note.addr .ic{margin-top:0}
+.addr-text{flex:1;word-break:break-word}
+.addr-copy{flex:0 0 auto;border:none;cursor:pointer;background:rgba(43,42,61,.08);color:var(--indigo);
+  border-radius:9px;padding:7px 9px;font-size:14px;line-height:1;transition:background .15s,transform .12s}
+.addr-copy:hover{background:rgba(43,42,61,.16)}
+.addr-copy:active{transform:scale(.9)}
+.addr-copy.copied{background:linear-gradient(135deg,#E5556E,#C84B86);color:#fff}
 .d-actions{margin-top:22px;display:flex;flex-direction:column;gap:10px}
 .go{border:none;cursor:pointer;border-radius:15px;padding:15px;font-family:var(--sans);font-size:15.5px;font-weight:700;color:#fff;
   background:linear-gradient(135deg,#E5556E,#C84B86);box-shadow:0 8px 20px rgba(200,75,134,.35);
@@ -423,6 +439,7 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ===================== Catégories ===================== */
 const CATS = {
@@ -16283,6 +16300,8 @@ function init(){
   buildRegions();
   setupSept();
   loadFav();
+  pullFavFromCloud();
+  subscribeFavRealtime();
   buildShinkLegend();
   setupShink();
   setupFav();
@@ -16404,14 +16423,15 @@ function openDetail(p, m){
   selectedMarker = m;
   currentDetail = p;
 
-  const dest = encodeURIComponent(`${p.n}, ${p.r}, Japon`);
-  const gmaps = `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
+  const destText = `${p.n}, ${p.r}, Japon`;
+  const gmaps = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destText)}`;
 
   let html = `<span class="d-badge" style="background:${cat.color}">${p.icon||cat.emoji} ${cat.label}</span>`;
   if(p.sep && (p.date || p.curated)) html += `<span class="d-sep">🍁 Septembre</span>`;
   html += `<div class="d-region">📍 ${p.r}</div>`;
   html += `<h2 class="d-title">${p.n}</h2>`;
   html += `<p class="d-desc">${p.d}</p>`;
+  html += `<div class="d-note addr"><span class="ic">📮</span><span class="addr-text">${destText}</span><button class="addr-copy" title="Copier l'adresse" onclick="copyDetailAddress(event)">⧉</button></div>`;
   if(p.date) html += `<div class="d-note date"><span class="ic">🗓️</span><span>${p.date}</span></div>`;
   if(p.tip) html += `<div class="d-note tip"><span class="ic">💡</span><span>${p.tip}</span></div>`;
   html += `<div class="d-actions">`;
@@ -16546,6 +16566,69 @@ let favOrder = [];      // ids dans l'ordre de l'itinéraire
 let favMap = {};        // id -> {n,cat,r,lat,lng,icon}
 let routeOn = false, routeLayer = null;
 
+/* ----- Synchronisation en ligne (Supabase) -----
+   Remplacer SUPABASE_URL et SUPABASE_ANON_KEY par les valeurs du projet
+   (Project Settings → API sur supabase.com). Tant que ce sont des
+   placeholders, la sync est désactivée et l'app se comporte comme avant
+   (favoris uniquement dans le localStorage du navigateur).
+   Une seule liste partagée (id fixe) : les favoris de Marine & Arnaud
+   sont communs, modifiables depuis n'importe quel appareil. */
+const SUPABASE_URL = 'https://dwykymlfseilwzcrpbbj.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_foyFRXgHi7_bRiO9L6QbiQ_2FC-7rTp';
+const FAV_ROW_ID = 'marine-arnaud';
+const SYNC_ENABLED = /^https:\/\//.test(SUPABASE_URL) && !!SUPABASE_ANON_KEY && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY';
+
+let sb = null;
+let syncSaveTimer = null;
+let applyingRemote = false; // évite de renvoyer en boucle un changement qu'on vient de recevoir du serveur
+
+if(SYNC_ENABLED && typeof supabase !== 'undefined'){
+  try{ sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }catch(e){ sb = null; }
+}
+
+function applyRemoteFav(payload){
+  if(!payload || !Array.isArray(payload.order)) return;
+  applyingRemote = true;
+  favOrder = payload.order;
+  favMap = payload.map || {};
+  try{ localStorage.setItem(FAV_KEY, JSON.stringify({order:favOrder, map:favMap})); }catch(e){}
+  updateFavCountBtn();
+  renderFavList();
+  allMarkers.forEach(o => applyFavMarker(o.p, isFav(placeId(o.p))));
+  if(currentDetail) syncFavToggle(currentDetail);
+  if(routeOn) drawRoute();
+  applyingRemote = false;
+}
+
+async function pullFavFromCloud(){
+  if(!sb) return;
+  try{
+    const { data, error } = await sb.from('favorites').select('data, updated_at').eq('id', FAV_ROW_ID).maybeSingle();
+    if(!error && data) applyRemoteFav(data.data);
+  }catch(e){ /* hors-ligne ou service indisponible : on garde la copie locale */ }
+}
+
+function pushFavToCloud(){
+  if(!sb || applyingRemote) return;
+  clearTimeout(syncSaveTimer);
+  syncSaveTimer = setTimeout(() => {
+    sb.from('favorites').upsert({
+      id: FAV_ROW_ID,
+      data: { order: favOrder, map: favMap },
+      updated_at: new Date().toISOString()
+    }).then(({error}) => { /* si hors-ligne : échoue silencieusement, sera renvoyé au prochain changement */ });
+  }, 600);
+}
+
+function subscribeFavRealtime(){
+  if(!sb) return;
+  sb.channel('favorites-sync')
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'favorites', filter: `id=eq.${FAV_ROW_ID}` },
+      (payload) => { if(payload.new && payload.new.data) applyRemoteFav(payload.new.data); })
+    .subscribe();
+}
+
 function placeId(p){ return (p.n||'') + '@' + (+p.lat).toFixed(4) + ',' + (+p.lng).toFixed(4); }
 function isFav(id){ return favOrder.indexOf(id) > -1; }
 function loadFav(){
@@ -16556,6 +16639,7 @@ function loadFav(){
 }
 function saveFav(){
   try{ localStorage.setItem(FAV_KEY, JSON.stringify({order:favOrder, map:favMap})); }catch(e){}
+  pushFavToCloud();
 }
 function findMarker(id){ return allMarkers.find(o => placeId(o.p) === id); }
 
@@ -16722,6 +16806,33 @@ function showToast(msg){
   toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
 }
 
+/* ----- Copie de l'adresse affichée dans la fiche détail ----- */
+function copyDetailAddress(e){
+  if(e) e.stopPropagation();
+  if(!currentDetail) return;
+  const text = `${currentDetail.n}, ${currentDetail.r}, Japon`;
+  const btn = e ? e.currentTarget : null;
+  const done = () => {
+    showToast('📍 Adresse copiée');
+    if(btn){ btn.classList.add('copied'); setTimeout(() => btn.classList.remove('copied'), 900); }
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(() => legacyCopy(text, done));
+  } else {
+    legacyCopy(text, done);
+  }
+}
+function legacyCopy(text, cb){
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly',''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    cb();
+  }catch(err){ showToast('Copie impossible sur ce navigateur'); }
+}
+
 /* ----- Export : télécharge un fichier .json partageable ----- */
 function exportFav(){
   if(!favOrder.length){ showToast('Aucun favori à exporter'); return; }
@@ -16809,6 +16920,18 @@ window.addEventListener('load', () => {
   }
   init();
 });
+
+/* ===================== PWA / Hors-ligne =====================
+   Met l'app en cache pour qu'elle reste utilisable sans réseau
+   (utile une fois sur place, au Japon) : l'app shell est mis en
+   cache dès la première visite, les tuiles de carte au fur et à
+   mesure qu'elles sont affichées. */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* mode hors-ligne indisponible, l'app reste utilisable en ligne */ });
+  });
+}
+
 </script>
 </body>
 </html>
