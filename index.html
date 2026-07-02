@@ -228,6 +228,27 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
 .petals-layer{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;border-radius:inherit}
 .petal{position:absolute;top:-24px;font-size:16px;opacity:.85;pointer-events:none;animation:fall linear infinite;z-index:0}
 @keyframes fall{0%{transform:translateY(-30px) rotate(0);opacity:0}10%{opacity:.85}100%{transform:translateY(115vh) rotate(360deg);opacity:0}}
+.authgate{position:fixed;inset:0;z-index:2100;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:linear-gradient(135deg,rgba(43,42,61,.7),rgba(91,95,151,.6));backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  transition:opacity .4s}
+.authgate.hide{opacity:0;pointer-events:none}
+.authcard{max-width:360px;padding:38px 32px 32px}
+.authcard .crest{font-size:26px;letter-spacing:6px;color:var(--sakura);margin-bottom:8px}
+.authcard h2{font-family:var(--serif);font-size:26px;font-weight:600;margin:2px 0 4px;
+  background:linear-gradient(120deg,#C84B86,#5B5F97);-webkit-background-clip:text;background-clip:text;color:transparent}
+.authsub{font-size:13.5px;color:var(--ink-soft);margin-bottom:22px}
+.authinput{width:100%;box-sizing:border-box;font-family:var(--sans);font-size:16px;padding:13px 16px;
+  border-radius:14px;border:1px solid rgba(91,95,151,.28);background:#fff;margin-bottom:14px;text-align:center;letter-spacing:1px}
+.authinput:focus{outline:none;border-color:var(--sakura)}
+.authbtn{width:100%;border:none;cursor:pointer;border-radius:16px;padding:14px 20px;font-family:var(--sans);
+  font-size:15.5px;font-weight:700;color:#fff;background:linear-gradient(135deg,#E5556E,#C84B86);
+  box-shadow:0 12px 28px rgba(200,75,134,.35);transition:transform .14s,box-shadow .2s}
+.authbtn:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(200,75,134,.45)}
+.authbtn:disabled{opacity:.6;cursor:default;transform:none}
+.autherr{min-height:18px;font-size:12.5px;color:#c0284a;margin-top:12px}
+.logout-link{display:block;margin:16px auto 0;background:none;border:none;cursor:pointer;font-family:var(--sans);
+  font-size:12px;color:var(--ink-soft);text-decoration:underline;padding:4px}
+.logout-link:hover{color:var(--indigo)}
 
 @media (max-width:480px){
   .brand .names{font-size:17px}
@@ -354,6 +375,17 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
 </style>
 </head>
 <body>
+<div class="authgate" id="authgate">
+  <form class="card authcard" id="authForm">
+    <div class="crest">✿ ❀ ✿</div>
+    <h2>Marine &amp; Arnaud</h2>
+    <p class="authsub">Espace privé — voyage de noces au Japon</p>
+    <input type="password" id="authPw" class="authinput" placeholder="Mot de passe" autocomplete="current-password" required>
+    <button type="submit" class="authbtn" id="authSubmit">Entrer</button>
+    <div class="autherr" id="authErr"></div>
+  </form>
+</div>
+
 <div id="map"></div>
 
 <header class="header">
@@ -407,6 +439,7 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
       <button id="importBtn">⬆️ Importer</button>
     </div>
     <div class="fav-note" id="favNote"></div>
+    <button class="logout-link" id="logoutBtn" type="button">🔓 Se déconnecter</button>
   </div>
   <input type="file" id="importFile" accept="application/json,.json" style="display:none">
 </aside>
@@ -16923,15 +16956,73 @@ document.getElementById('infoBtn').onclick = () => {
   }
 })();
 
-/* ===================== Boot ===================== */
-window.addEventListener('load', () => {
+/* ===================== Authentification (accès privé) =====================
+   Un seul compte partagé, créé manuellement dans le dashboard Supabase
+   (Authentication → Users → Add user, avec "Auto Confirm User" activé).
+   Tant que sb (client Supabase) n'existe pas, l'accès reste ouvert par
+   défaut : impossible de vérifier un mot de passe sans back-end configuré. */
+const LOGIN_EMAIL = 'voyage@marine-arnaud.app';
+
+function bootApp(){
   if(typeof L === 'undefined'){
     document.getElementById('map').innerHTML =
       '<div style="padding:40px;text-align:center;font-family:sans-serif">La carte n\'a pas pu se charger. Rechargez la page.</div>';
     return;
   }
   init();
-});
+}
+
+function wireAuthForm(){
+  const form = document.getElementById('authForm');
+  const err = document.getElementById('authErr');
+  const btn = document.getElementById('authSubmit');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pw = document.getElementById('authPw').value;
+    btn.disabled = true; btn.textContent = 'Connexion…'; err.textContent = '';
+    try{
+      const { error } = await sb.auth.signInWithPassword({ email: LOGIN_EMAIL, password: pw });
+      if(error){
+        err.textContent = 'Mot de passe incorrect.';
+        btn.disabled = false; btn.textContent = 'Entrer';
+        return;
+      }
+      document.getElementById('authgate').classList.add('hide');
+      bootApp();
+    }catch(e){
+      err.textContent = 'Connexion impossible (vérifie ta connexion internet).';
+      btn.disabled = false; btn.textContent = 'Entrer';
+    }
+  });
+}
+
+async function checkAuthAndBoot(){
+  const gate = document.getElementById('authgate');
+  if(!sb){
+    // Pas de client Supabase (config absente) : impossible de protéger l'accès, on ne bloque pas l'app.
+    gate.classList.add('hide');
+    bootApp();
+    return;
+  }
+  try{
+    const { data } = await sb.auth.getSession();
+    if(data && data.session){
+      gate.classList.add('hide');
+      bootApp();
+      return;
+    }
+  }catch(e){ /* pas de session valide → on affiche le formulaire de connexion */ }
+  wireAuthForm();
+}
+
+const logoutBtn = document.getElementById('logoutBtn');
+if(logoutBtn) logoutBtn.onclick = async () => {
+  if(sb) await sb.auth.signOut();
+  location.reload();
+};
+
+/* ===================== Boot ===================== */
+window.addEventListener('load', checkAuthAndBoot);
 
 /* ===================== PWA / Hors-ligne =====================
    Met l'app en cache pour qu'elle reste utilisable sans réseau
