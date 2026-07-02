@@ -136,6 +136,28 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
 .chip.off{background:rgba(255,255,255,.65);color:var(--ink-soft);border-color:rgba(43,42,61,.12)}
 .chip.off .em{filter:grayscale(.7);opacity:.7}
 .chip:hover{transform:translateY(-2px)}
+.filter-toggle{display:none}
+.filter-actions{display:none}
+.filter-scrim{position:fixed;inset:0;z-index:840;background:rgba(31,28,44,.28);opacity:0;pointer-events:none;transition:opacity .3s}
+.filter-scrim.show{opacity:1;pointer-events:auto}
+@media (max-width:720px){
+  /* Sur mobile, la barre de chips devient un panneau replié derrière un bouton Filtres */
+  .filter-toggle{display:flex;align-items:center;gap:8px;position:fixed;z-index:800;bottom:12px;left:50%;transform:translateX(-50%);
+    cursor:pointer;border:1px solid rgba(255,255,255,.6);background:var(--glass-strong);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    box-shadow:var(--shadow);border-radius:999px;padding:12px 20px;font-family:var(--sans);font-size:14px;font-weight:700;color:var(--ink)}
+  .filter-toggle .fcount{font-size:11.5px;font-weight:700;color:var(--indigo);background:rgba(91,95,151,.14);border-radius:999px;padding:2px 9px}
+  .filters{
+    z-index:845;left:12px;right:12px;bottom:0;top:auto;transform:translateY(115%);max-width:none;
+    flex-wrap:wrap;overflow:visible;max-height:64vh;overflow-y:auto;
+    border-radius:22px 22px 0 0;padding:16px 14px calc(18px + env(safe-area-inset-bottom));
+    transition:transform .32s cubic-bezier(.32,.72,0,1);justify-content:center}
+  .filters.open{transform:none}
+  .chip{flex:1 1 calc(50% - 8px)}
+  .filter-actions{flex-basis:100%;display:flex;gap:8px;margin-bottom:2px}
+  .filter-actions button{flex:1;border:none;cursor:pointer;border-radius:999px;padding:8px 10px;font-family:var(--sans);
+    font-size:12.5px;font-weight:700;color:var(--indigo);background:rgba(91,95,151,.1)}
+  .filter-actions button:hover{background:rgba(91,95,151,.18)}
+}
 
 /* ---------- Loading ---------- */
 .loading{position:fixed;z-index:900;bottom:74px;left:50%;transform:translateX(-50%);
@@ -159,7 +181,6 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
   .drawer{left:0;right:0;bottom:0;max-height:82vh;border-radius:24px 24px 0 0;border-top:1px solid rgba(255,255,255,.6);
     transform:translateY(105%);padding:14px 20px 26px}
   .drawer.open{transform:none}
-  .filters{bottom:12px}
   .loading{bottom:70px}
 }
 .grab{display:none}
@@ -250,10 +271,17 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
   font-size:12px;color:var(--ink-soft);text-decoration:underline;padding:4px}
 .logout-link:hover{color:var(--indigo)}
 
+@media (max-width:720px){
+  .leaflet-control-zoom{display:none} /* redondant : on zoome au pincement sur tactile */
+}
 @media (max-width:480px){
-  .brand .names{font-size:17px}
-  .btn{font-size:0;padding:11px 12px}
-  .btn .ic{font-size:17px}
+  .header{gap:8px;padding:10px 12px}
+  .brand{max-width:58vw}
+  .brand .names{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .htools{gap:6px}
+  .btn{font-size:0;padding:10px 11px}
+  .btn .ic{font-size:16px}
   .btn .lbl{display:none}
   .card h1{font-size:31px}
 }
@@ -410,6 +438,8 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
   <div class="credit">Recommandations inspirées d'<a href="https://ichiban-japan.com/jipangu/" target="_blank" rel="noopener">Ichiban Japan</a> — sa carte, son livre <i>72 saisons du Japon</i> &amp; ses classements.</div>
 </div>
 
+<div class="filter-scrim" id="filterScrim"></div>
+<button class="filter-toggle" id="filterToggle" type="button"><span class="ic">🔎</span> Filtres <span class="fcount" id="filterCount"></span></button>
 <div class="filters" id="filters"></div>
 
 <div class="loading" id="loading"><div class="spin"></div><span id="loadTxt">Chargement des lieux…</span></div>
@@ -16396,6 +16426,16 @@ function finishLoading(total, rawCount){
 /* ===================== Filtres ===================== */
 function buildFilters(){
   const wrap = document.getElementById('filters');
+  const actions = document.createElement('div');
+  actions.className = 'filter-actions';
+  const allBtn = document.createElement('button');
+  allBtn.type = 'button'; allBtn.textContent = 'Tout sélectionner';
+  const noneBtn = document.createElement('button');
+  noneBtn.type = 'button'; noneBtn.textContent = 'Tout désélectionner';
+  actions.appendChild(allBtn); actions.appendChild(noneBtn);
+  wrap.appendChild(actions);
+
+  const chips = [];
   Object.entries(CATS).forEach(([key,c]) => {
     const chip = document.createElement('div');
     chip.className = 'chip';
@@ -16404,10 +16444,47 @@ function buildFilters(){
     chip.onclick = () => {
       if(activeCats.has(key)){ activeCats.delete(key); chip.classList.add('off'); }
       else { activeCats.add(key); chip.classList.remove('off'); }
+      updateFilterCount();
       refreshMarkers();
     };
     wrap.appendChild(chip);
+    chips.push({key, chip});
   });
+
+  allBtn.onclick = () => {
+    chips.forEach(({key, chip}) => { activeCats.add(key); chip.classList.remove('off'); });
+    updateFilterCount();
+    refreshMarkers();
+  };
+  noneBtn.onclick = () => {
+    chips.forEach(({key, chip}) => { activeCats.delete(key); chip.classList.add('off'); });
+    updateFilterCount();
+    refreshMarkers();
+  };
+
+  updateFilterCount();
+  setupFilterToggle();
+}
+
+function updateFilterCount(){
+  const el = document.getElementById('filterCount');
+  if(!el) return;
+  const total = Object.keys(CATS).length;
+  const active = activeCats.size;
+  el.textContent = active === total ? '' : `${active}/${total}`;
+}
+
+function setupFilterToggle(){
+  const toggle = document.getElementById('filterToggle');
+  const panel = document.getElementById('filters');
+  const scrim = document.getElementById('filterScrim');
+  if(!toggle || !panel || !scrim) return;
+  const close = () => { panel.classList.remove('open'); scrim.classList.remove('show'); };
+  toggle.onclick = () => {
+    const open = panel.classList.toggle('open');
+    scrim.classList.toggle('show', open);
+  };
+  scrim.onclick = close;
 }
 
 /* ===================== Bouton Septembre ===================== */
