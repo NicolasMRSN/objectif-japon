@@ -116,7 +116,10 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
 .menu button{width:100%;text-align:left;border:none;background:transparent;border-radius:12px;padding:11px 12px;
   font-family:var(--sans);font-size:14px;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:10px;transition:background .15s}
 .menu button:hover{background:rgba(232,160,191,.16)}
-.menu button .dot{font-size:15px;width:18px;text-align:center}
+.menu button .dot{font-size:15px;width:18px;text-align:center;flex:0 0 auto}
+.reg-text{display:flex;flex-direction:column;line-height:1.3;min-width:0}
+.reg-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.reg-city{font-size:11px;color:var(--ink-soft);font-weight:500}
 .menu .credit{border-top:1px solid rgba(43,42,61,.08);margin-top:6px;padding:10px 10px 6px;font-size:11px;color:var(--ink-soft);line-height:1.5}
 .menu .credit a{color:var(--indigo);font-weight:600;text-decoration:none}
 .menu .credit a:hover{text-decoration:underline}
@@ -400,6 +403,14 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
   box-shadow:0 10px 26px rgba(0,0,0,.32);opacity:0;pointer-events:none;transition:all .3s;max-width:calc(100vw - 32px);text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%)}
 @media (max-width:720px){.toast{bottom:78px}}
+.geo-btn{position:fixed;z-index:800;right:16px;bottom:100px;width:46px;height:46px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.6);background:var(--glass-strong);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:var(--shadow);font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--ink);transition:transform .12s,background .2s,color .2s}
+.geo-btn:hover{transform:translateY(-1px)}
+.geo-btn.active{background:linear-gradient(135deg,#4285F4,#3367D6);color:#fff;border-color:transparent;box-shadow:0 8px 20px rgba(66,133,244,.4)}
+.geo-btn.loading{animation:sp 1s linear infinite}
+@media (max-width:720px){.geo-btn{bottom:16px}}
 </style>
 </head>
 <body>
@@ -415,6 +426,7 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
 </div>
 
 <div id="map"></div>
+<button class="geo-btn" id="geoBtn" type="button" title="Me géolocaliser"><span class="ic">📍</span></button>
 
 <header class="header">
   <div class="brand">
@@ -756,19 +768,19 @@ const PLACES = [
 /* ===================== Régions ===================== */
 const REGIONS = [
   {name:"Tout le Japon", emoji:"🗾", all:true},
-  {name:"Hokkaido", emoji:"❄️", c:[43.3,142.6], z:6},
-  {name:"Tohoku (Nord)", emoji:"🍁", c:[39.2,140.6], z:6},
-  {name:"Tokyo & Kanto", emoji:"🏙️", c:[35.68,139.76], z:10},
-  {name:"Hakone & Mont Fuji", emoji:"🗻", c:[35.33,138.9], z:10},
-  {name:"Alpes (Chubu)", emoji:"🏔️", c:[36.30,137.50], z:8},
-  {name:"Kanazawa & Mer du Japon", emoji:"🦀", c:[36.55,136.70], z:9},
-  {name:"Kyoto", emoji:"⛩️", c:[35.01,135.76], z:12},
-  {name:"Nara", emoji:"🦌", c:[34.685,135.84], z:13},
-  {name:"Osaka & Kansai", emoji:"🐙", c:[34.69,135.50], z:10},
-  {name:"Hiroshima & Chugoku", emoji:"🕊️", c:[34.50,132.80], z:8},
-  {name:"Shikoku", emoji:"🍜", c:[33.85,133.55], z:8},
-  {name:"Kyushu", emoji:"🌋", c:[32.80,131.00], z:7},
-  {name:"Okinawa", emoji:"🏝️", c:[26.30,127.80], z:9}
+  {name:"Hokkaido", emoji:"❄️", city:"Sapporo", c:[43.3,142.6], z:6},
+  {name:"Tohoku (Nord)", emoji:"🍁", city:"Sendai", c:[39.2,140.6], z:6},
+  {name:"Tokyo & Kanto", emoji:"🏙️", city:"Tokyo", c:[35.68,139.76], z:10},
+  {name:"Hakone & Mont Fuji", emoji:"🗻", city:"Odawara", c:[35.33,138.9], z:10},
+  {name:"Alpes (Chubu)", emoji:"🏔️", city:"Matsumoto", c:[36.30,137.50], z:8},
+  {name:"Kanazawa & Mer du Japon", emoji:"🦀", city:"Kanazawa", c:[36.55,136.70], z:9},
+  {name:"Kyoto", emoji:"⛩️", city:"Kyoto", c:[35.01,135.76], z:12},
+  {name:"Nara", emoji:"🦌", city:"Nara", c:[34.685,135.84], z:13},
+  {name:"Osaka & Kansai", emoji:"🐙", city:"Osaka", c:[34.69,135.50], z:10},
+  {name:"Hiroshima & Chugoku", emoji:"🕊️", city:"Hiroshima", c:[34.50,132.80], z:8},
+  {name:"Shikoku", emoji:"🍜", city:"Matsuyama", c:[33.85,133.55], z:8},
+  {name:"Kyushu", emoji:"🌋", city:"Fukuoka", c:[32.80,131.00], z:7},
+  {name:"Okinawa", emoji:"🏝️", city:"Naha", c:[26.30,127.80], z:9}
 ];
 
 /* ===================== DONNÉES (bake) =====================
@@ -16368,6 +16380,7 @@ function init(){
   buildShinkLegend();
   setupShink();
   setupFav();
+  setupGeo();
   updateFavCountBtn();
 
   // Chargement asynchrone des ~900 lieux puis construction
@@ -16503,7 +16516,8 @@ function buildRegions(){
   const list = document.getElementById('regList');
   REGIONS.forEach(rg => {
     const b = document.createElement('button');
-    b.innerHTML = `<span class="dot">${rg.emoji}</span> ${rg.name}`;
+    const cityHtml = rg.city ? `<span class="reg-city">${rg.city}</span>` : '';
+    b.innerHTML = `<span class="dot">${rg.emoji}</span><span class="reg-text"><span class="reg-name">${rg.name}</span>${cityHtml}</span>`;
     b.onclick = () => {
       closeMenu();
       if(rg.all){ map.flyToBounds(initialBounds, {padding:[30,30], duration:1.1}); }
@@ -16666,6 +16680,60 @@ function setupShink(){
     if(shinkOn){ if(!shinkLayer) buildShinkansen(); shinkLayer.addTo(map); }
     else if(shinkLayer){ map.removeLayer(shinkLayer); }
   };
+}
+
+/* ===================== Géolocalisation =====================
+   Utile une fois sur place, au Japon : localise l'utilisateur sur la
+   carte et suit sa position en direct tant que le bouton est actif. */
+let geoWatching = false, geoFirstFix = true;
+let geoMarker = null, geoCircle = null;
+
+function stopGeo(){
+  map.stopLocate();
+  geoWatching = false;
+  const b = document.getElementById('geoBtn');
+  if(b) b.classList.remove('active','loading');
+  if(geoMarker){ map.removeLayer(geoMarker); geoMarker = null; }
+  if(geoCircle){ map.removeLayer(geoCircle); geoCircle = null; }
+}
+
+function startGeo(){
+  if(!navigator.geolocation){
+    showToast('📍 Géolocalisation non disponible sur cet appareil');
+    return;
+  }
+  geoWatching = true;
+  geoFirstFix = true;
+  const b = document.getElementById('geoBtn');
+  b.classList.add('active','loading');
+  map.locate({watch:true, enableHighAccuracy:true, maxZoom:16});
+}
+
+function setupGeo(){
+  const b = document.getElementById('geoBtn');
+  b.onclick = () => { geoWatching ? stopGeo() : startGeo(); };
+
+  map.on('locationfound', (e) => {
+    if(!geoWatching) return;
+    b.classList.remove('loading');
+    if(!geoMarker){
+      geoMarker = L.circleMarker(e.latlng, {radius:8, weight:3, color:'#fff', fillColor:'#4285F4', fillOpacity:1, interactive:false}).addTo(map);
+    } else {
+      geoMarker.setLatLng(e.latlng);
+    }
+    geoMarker.bringToFront();
+    if(geoCircle) map.removeLayer(geoCircle);
+    geoCircle = L.circle(e.latlng, {radius:e.accuracy, color:'#4285F4', weight:1, fillColor:'#4285F4', fillOpacity:.12, interactive:false}).addTo(map);
+    if(geoFirstFix){
+      map.flyTo(e.latlng, Math.max(map.getZoom(), 15), {duration:.8});
+      geoFirstFix = false;
+    }
+  });
+
+  map.on('locationerror', () => {
+    stopGeo();
+    showToast('📍 Position indisponible — vérifie l\'autorisation de localisation de ton navigateur');
+  });
 }
 
 /* ====================================================================== */
