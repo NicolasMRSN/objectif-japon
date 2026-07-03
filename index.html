@@ -133,6 +133,10 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
   border:1px solid rgba(255,255,255,.6);box-shadow:var(--shadow);border-radius:999px}
 .filters::-webkit-scrollbar{display:none}
 .filters.muted{opacity:.5}
+.filters.fav-mode .chip:not(.fav-chip){opacity:.35;filter:grayscale(.5)}
+.fav-chip{background:rgba(255,71,126,.1);color:#a32457;border:1.5px solid rgba(255,71,126,.28)}
+.fav-chip .em{filter:none;opacity:1}
+.fav-chip.on{background:linear-gradient(135deg,#E5556E,#C84B86);color:#fff;border-color:transparent;opacity:1!important;filter:none!important}
 .chip{flex:0 0 auto;cursor:pointer;border:1.5px solid transparent;border-radius:999px;padding:9px 15px 9px 12px;
   font-size:13.5px;font-weight:600;color:#fff;display:flex;align-items:center;gap:7px;white-space:nowrap;
   transition:all .18s ease;user-select:none;background:var(--c)}
@@ -157,6 +161,7 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
     transition:transform .32s cubic-bezier(.32,.72,0,1);justify-content:center}
   .filters.open{transform:none}
   .chip{flex:1 1 calc(50% - 8px)}
+  .fav-chip{flex-basis:100%;justify-content:center}
   .filter-actions{flex-basis:100%;display:flex;gap:8px;margin-bottom:2px}
   .filter-actions button{flex:1;border:none;cursor:pointer;border-radius:999px;padding:8px 10px;font-family:var(--sans);
     font-size:12.5px;font-weight:700;color:var(--indigo);background:rgba(91,95,151,.1)}
@@ -16250,6 +16255,7 @@ const SPOTS_DATA = [
 /* ===================== Carte ===================== */
 let map, clusterGroup, allMarkers = [], selectedMarker = null, ALL = [];
 let septOnly = false;
+let favOnly = false;
 const activeCats = new Set(Object.keys(CATS));
 const initialBounds = L.latLngBounds([30.6,128.6],[45.7,146.4]);
 const BLANK_TILE = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
@@ -16421,7 +16427,7 @@ function buildMarkers(list){
 function refreshMarkers(){
   clusterGroup.clearLayers();
   const shown = allMarkers
-    .filter(o => septOnly ? o.p.sep : activeCats.has(o.p.cat))
+    .filter(o => favOnly ? isFav(placeId(o.p)) : (septOnly ? o.p.sep : activeCats.has(o.p.cat)))
     .map(o => o.m);
   clusterGroup.addLayers(shown);
   if(!map.hasLayer(clusterGroup)) map.addLayer(clusterGroup);
@@ -16430,7 +16436,8 @@ function refreshMarkers(){
 
 function updateCount(n){
   const el = document.getElementById('menuCount');
-  if(el) el.textContent = (n!=null?n:'…') + ' lieu' + ((n||0)>1?'x':'') + ' affiché' + ((n||0)>1?'s':'') + (septOnly?' · mode septembre 🍁':'');
+  const suffix = favOnly ? ' · favoris uniquement ❤' : (septOnly ? ' · mode septembre 🍁' : '');
+  if(el) el.textContent = (n!=null?n:'…') + ' lieu' + ((n||0)>1?'x':'') + ' affiché' + ((n||0)>1?'s':'') + suffix;
 }
 
 function finishLoading(total, rawCount){
@@ -16443,6 +16450,19 @@ function finishLoading(total, rawCount){
 /* ===================== Filtres ===================== */
 function buildFilters(){
   const wrap = document.getElementById('filters');
+
+  const favChip = document.createElement('div');
+  favChip.className = 'chip fav-chip';
+  favChip.id = 'favOnlyChip';
+  favChip.innerHTML = `<span class="em">❤</span><span>Favoris uniquement</span>`;
+  favChip.onclick = () => {
+    favOnly = !favOnly;
+    favChip.classList.toggle('on', favOnly);
+    wrap.classList.toggle('fav-mode', favOnly);
+    refreshMarkers();
+  };
+  wrap.appendChild(favChip);
+
   const actions = document.createElement('div');
   actions.className = 'filter-actions';
   const allBtn = document.createElement('button');
@@ -16783,6 +16803,7 @@ function applyRemoteFav(payload){
   allMarkers.forEach(o => applyFavMarker(o.p, isFav(placeId(o.p))));
   if(currentDetail) syncFavToggle(currentDetail);
   if(routeOn) drawRoute();
+  if(favOnly) refreshMarkers();
   applyingRemote = false;
 }
 
@@ -16856,6 +16877,7 @@ function toggleFav(p){
   updateFavCountBtn();
   renderFavList();
   if(routeOn) drawRoute();
+  if(favOnly) refreshMarkers();
 }
 function updateFavCountBtn(){
   const b = document.getElementById('favCount');
@@ -16928,6 +16950,7 @@ function removeFav(id){
   if(currentDetail && placeId(currentDetail) === id) syncFavToggle(currentDetail);
   updateFavCountBtn(); renderFavList();
   if(routeOn) drawRoute();
+  if(favOnly) refreshMarkers();
 }
 function goToFav(id){
   const f = favMap[id]; if(!f) return;
