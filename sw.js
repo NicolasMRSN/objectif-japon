@@ -2,7 +2,7 @@
    Objectif : que l'appli et les zones de carte déjà consultées restent
    utilisables sans connexion (utile une fois sur place, au Japon). */
 
-const VERSION = 'v2';
+const VERSION = 'v3';
 const APP_CACHE = 'oj-app-' + VERSION;
 const TILE_CACHE = 'oj-tiles-' + VERSION;
 
