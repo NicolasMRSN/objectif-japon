@@ -127,11 +127,10 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
 .menu .mcount{margin:0 8px 6px;font-size:11.5px;color:var(--indigo);font-weight:600}
 
 /* ---------- Filter bar ---------- */
-.filters{position:fixed;z-index:800;bottom:18px;left:50%;transform:translateX(-50%);max-width:min(980px,calc(100vw - 24px));
-  display:flex;gap:8px;padding:9px;overflow-x:auto;scrollbar-width:none;
+.filters{position:fixed;z-index:800;bottom:18px;left:50%;transform:translateX(-50%);max-width:min(760px,calc(100vw - 24px));
+  display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:10px 12px;
   background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  border:1px solid rgba(255,255,255,.6);box-shadow:var(--shadow);border-radius:999px}
-.filters::-webkit-scrollbar{display:none}
+  border:1px solid rgba(255,255,255,.6);box-shadow:var(--shadow);border-radius:26px}
 .filters.muted{opacity:.5}
 .filters.fav-mode .chip:not(.fav-chip){opacity:.35;filter:grayscale(.5)}
 .fav-chip{background:rgba(255,71,126,.1);color:#a32457;border:1.5px solid rgba(255,71,126,.28)}
@@ -16454,7 +16453,7 @@ function buildFilters(){
   const favChip = document.createElement('div');
   favChip.className = 'chip fav-chip';
   favChip.id = 'favOnlyChip';
-  favChip.innerHTML = `<span class="em">❤</span><span>Favoris uniquement</span>`;
+  favChip.innerHTML = `<span class="em">❤</span><span>Favoris</span>`;
   favChip.onclick = () => {
     favOnly = !favOnly;
     favChip.classList.toggle('on', favOnly);
