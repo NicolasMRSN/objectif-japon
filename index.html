@@ -133,9 +133,9 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
   border:1px solid rgba(255,255,255,.6);box-shadow:var(--shadow);border-radius:26px}
 .filters.muted{opacity:.5}
 .filters.fav-mode .chip:not(.fav-chip){opacity:.35;filter:grayscale(.5)}
-.fav-chip{background:rgba(255,71,126,.1);color:#a32457;border:1.5px solid rgba(255,71,126,.28)}
-.fav-chip .em{filter:none;opacity:1}
-.fav-chip.on{background:linear-gradient(135deg,#E5556E,#C84B86);color:#fff;border-color:transparent;opacity:1!important;filter:none!important}
+.fav-chip, .chip.fav-chip{background:rgba(255,71,126,.1);color:#a32457;border:1.5px solid rgba(255,71,126,.28)}
+.fav-chip .em, .chip.fav-chip .em{filter:none;opacity:1}
+.fav-chip.on, .chip.fav-chip.on{background:linear-gradient(135deg,#E5556E,#C84B86);color:#fff;border-color:transparent;opacity:1!important;filter:none!important}
 .chip{flex:0 0 auto;cursor:pointer;border:1.5px solid transparent;border-radius:999px;padding:9px 15px 9px 12px;
   font-size:13.5px;font-weight:600;color:#fff;display:flex;align-items:center;gap:7px;white-space:nowrap;
   transition:all .18s ease;user-select:none;background:var(--c)}
