@@ -206,6 +206,7 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
 .d-note{margin-top:14px;padding:13px 15px;border-radius:14px;font-size:13.5px;line-height:1.55;display:flex;gap:9px;align-items:flex-start}
 .d-note.tip{background:rgba(201,162,39,.12);color:#7a5f12}
 .d-note.date{background:rgba(255,71,126,.1);color:#a32457}
+.d-note.sepwhy{background:rgba(230,126,34,.12);color:#8a4a12}
 .d-note.addr{background:rgba(91,95,151,.09);color:#3c3a52;align-items:center}
 .d-note .ic{font-size:15px;flex:0 0 auto;margin-top:1px}
 .d-note.addr .ic{margin-top:0}
@@ -606,12 +607,12 @@ const PLACES = [
   {n:"Ouchi-juku",cat:"monument",icon:"🏘️",r:"Aizu, Fukushima",lat:37.3340,lng:139.8580,d:"Ancien relais aux maisons de chaume dans la région d'Aizu, ruelle hors du temps et fameux soba.",src:VILLAGES},
   {n:"Ookawaso (Ashinomaki)",cat:"ryokan",r:"Aizu, Fukushima",lat:37.4360,lng:139.8430,d:"Ryokan reculé à l'ambiance envoûtante, avec spectacle de shamisen : il aurait inspiré Demon Slayer.",src:RYOKAN},
   {n:"Étangs de Goshikinuma",cat:"nature",icon:"🏞️",r:"Kitashiobara, Fukushima",lat:37.5860,lng:140.0760,d:"Chapelet d'étangs aux couleurs changeantes (turquoise, émeraude) au pied du mont Bandai."},
-  {n:"Aizu Matsuri",cat:"festival",r:"Aizu-Wakamatsu, Fukushima",lat:37.4875,lng:139.9296,d:"L'ancienne cité des samouraïs ravive son histoire glorieuse avec parades, spectacles et démonstrations.",date:"Autour du 23 septembre",src:SILVER},
+  {n:"Aizu Matsuri",cat:"festival",r:"Aizu-Wakamatsu, Fukushima",lat:37.4875,lng:139.9296,d:"L'ancienne cité des samouraïs ravive son histoire glorieuse avec parades, spectacles et démonstrations.",date:"Autour du 23 septembre",sepWhy:"Fin septembre marque la meilleure fenêtre climatique de la région : les grosses chaleurs sont passées et les pluies d'automne n'ont pas encore commencé, idéal pour suivre les parades en extérieur.",src:SILVER},
 
   /* ---------- KANTO ---------- */
   {n:"Senso-ji",cat:"temple",r:"Asakusa, Tokyo",lat:35.7148,lng:139.7967,d:"Le plus ancien temple de Tokyo, avec sa porte Kaminarimon et son immense lanterne rouge.",tip:"Sublime en soirée, illuminé et bien plus calme."},
   {n:"Meiji Jingu",cat:"temple",r:"Shibuya, Tokyo",lat:35.6764,lng:139.6993,d:"Sanctuaire shinto niché dans une forêt de 100 000 arbres, havre de paix à deux pas de Harajuku."},
-  {n:"Nezu-jinja",cat:"temple",r:"Bunkyo, Tokyo",lat:35.7203,lng:139.7607,d:"Sanctuaire serein aux tunnels de torii vermillon. Son festival Reitaisai anime le quartier en septembre.",date:"Festival Reitaisai · septembre",src:SEP},
+  {n:"Nezu-jinja",cat:"temple",r:"Bunkyo, Tokyo",lat:35.7203,lng:139.7607,d:"Sanctuaire serein aux tunnels de torii vermillon. Son festival Reitaisai anime le quartier en septembre.",date:"Festival Reitaisai · septembre",sepWhy:"Le Reitaisai a lieu à date fixe chaque année autour du 21 septembre, en plein cœur de la saison des matsuri de rentrée qui anime tout Tokyo ce mois-ci.",src:SEP},
   {n:"Carrefour de Shibuya",cat:"monument",icon:"🌆",r:"Shibuya, Tokyo",lat:35.6595,lng:139.7005,d:"Le carrefour le plus célèbre du monde : une marée humaine sous les néons, hypnotique à la nuit tombée."},
   {n:"Tokyo Skytree",cat:"monument",icon:"🗼",r:"Sumida, Tokyo",lat:35.7101,lng:139.8107,d:"À 634 m, la plus haute tour du Japon offre un panorama vertigineux sur l'immensité de la ville.",tip:"Au coucher du soleil pour apercevoir le mont Fuji par temps clair."},
   {n:"teamLab Planets",cat:"monument",icon:"🎨",r:"Toyosu, Tokyo",lat:35.6486,lng:139.7906,d:"Une expérience d'art numérique immersive où l'on marche pieds nus dans l'eau et la lumière.",tip:"Réservez vos billets bien à l'avance."},
@@ -619,10 +620,11 @@ const PLACES = [
   {n:"Omoide Yokocho",cat:"food",icon:"🍢",r:"Shinjuku, Tokyo",lat:35.6938,lng:139.6996,d:"La « ruelle des souvenirs » : minuscules échoppes à yakitori dans une ambiance Showa enfumée."},
   {n:"Golden Gai",cat:"food",icon:"🍶",r:"Shinjuku, Tokyo",lat:35.6939,lng:139.7044,d:"Un dédale de 200 micro-bars pleins de caractère, chacun son univers. L'âme nocturne de Tokyo."},
   {n:"Udon Shin",cat:"food",icon:"🍜",r:"Shinjuku, Tokyo",lat:35.6905,lng:139.7000,d:"Des udon crémeux au carbonara et une tempura ultra croustillante : une adresse culte.",tip:"Arrivez tôt, la file s'allonge vite."},
-  {n:"Grand tournoi de sumo",cat:"festival",r:"Ryogoku, Tokyo",lat:35.6970,lng:139.7933,d:"Tous les mois impairs, les rikishi s'affrontent au Ryogoku Kokugikan. Le tournoi de septembre est inoubliable.",date:"Mi-septembre · 15 jours",src:SEP},
-  {n:"Daradara Matsuri",cat:"festival",r:"Daimon, Tokyo",lat:35.6566,lng:139.7517,d:"Le plus long festival du Japon (11 jours) au sanctuaire Shiba Daijin-gu, avec marché au gingembre et mikoshi.",date:"11 – 21 septembre",src:SEP},
-  {n:"Shinagawa Shukuba Matsuri",cat:"festival",r:"Shinagawa, Tokyo",lat:35.6190,lng:139.7390,d:"Sur l'ancienne route du Tokaido : parades de samouraïs et la fameuse procession des courtisanes (Oiran Dochu).",date:"Fin septembre",src:SEP},
-  {n:"Fukuro Matsuri",cat:"festival",r:"Ikebukuro, Tokyo",lat:35.7300,lng:139.7150,d:"Vigoureuses parades de mikoshi et danses : l'un des grands rendez-vous de la rentrée tokyoïte.",date:"Fin septembre",src:SEP},
+  {n:"Grand tournoi de sumo",cat:"festival",r:"Ryogoku, Tokyo",lat:35.6970,lng:139.7933,d:"Tous les mois impairs, les rikishi s'affrontent au Ryogoku Kokugikan. Le tournoi de septembre est inoubliable.",date:"Mi-septembre · 15 jours",sepWhy:"Seul des six tournois annuels à tomber pendant la saison touristique de septembre : la rentrée sportive du sumo, juste après la trêve estivale.",src:SEP},
+  {n:"Daradara Matsuri",cat:"festival",r:"Daimon, Tokyo",lat:35.6566,lng:139.7517,d:"Le plus long festival du Japon (11 jours) au sanctuaire Shiba Daijin-gu, avec marché au gingembre et mikoshi.",date:"11 – 21 septembre",sepWhy:"Son nom (« interminable ») vient justement de sa durée hors norme, calée chaque année en plein cœur de septembre : le seul mois où ce festival shinto s'étire sur onze jours complets.",src:SEP},
+  {n:"Shinagawa Shukuba Matsuri",cat:"festival",r:"Shinagawa, Tokyo",lat:35.6190,lng:139.7390,d:"Sur l'ancienne route du Tokaido : parades de samouraïs et la fameuse procession des courtisanes (Oiran Dochu).",date:"Fin septembre",sepWhy:"Célèbre la route du Tokaido à la période de l'année où les voyageurs d'autrefois la parcouraient le plus volontiers, une fois la chaleur estivale retombée.",src:SEP},
+  {n:"Fukuro Matsuri",cat:"festival",r:"Ikebukuro, Tokyo",lat:35.7300,lng:139.7150,d:"Vigoureuses parades de mikoshi et danses : l'un des grands rendez-vous de la rentrée tokyoïte.",date:"Fin septembre",sepWhy:"Marque traditionnellement la rentrée à Ikebukuro : les quartiers renouent avec les fêtes de voisinage juste après la pause estivale.",src:SEP},
+  {n:"Akasaka Hikawa Matsuri",cat:"festival",r:"Akasaka, Tokyo",lat:35.6707,lng:139.7367,d:"Parades de mikoshi et de chars dashi datant de l'époque Edo, danses Bon Odori dans les rues d'Akasaka.",date:"19 – 21 septembre",sepWhy:"Se tient chaque année sur ce même long week-end de septembre, quand les quartiers d'affaires de Tokyo célèbrent la fin de l'été avant l'arrivée de l'automne.",src:SEP},
   {n:"Toshogu de Nikko",cat:"temple",r:"Nikko, Tochigi",lat:36.7587,lng:139.5989,d:"Mausolée flamboyant du shogun Tokugawa Ieyasu, sculptures dorées au milieu de cèdres centenaires. (UNESCO)"},
   {n:"Chutes de Kegon",cat:"nature",icon:"🏞️",r:"Nikko, Tochigi",lat:36.7390,lng:139.5030,d:"Une cascade de 97 m plongeant depuis le lac Chuzenji, sublime aux premières couleurs d'automne."},
   {n:"Kusatsu Onsen",cat:"onsen",r:"Kusatsu, Gunma",lat:36.6225,lng:138.5966,d:"L'un des plus beaux villages thermaux du Japon : la place Yubatake fumante et la danse du yumomi.",tip:"Superbe le soir, illuminé.",src:VONSEN},
@@ -630,7 +632,7 @@ const PLACES = [
   {n:"Kawagoe (Petit Edo)",cat:"monument",icon:"🏘️",r:"Kawagoe, Saitama",lat:35.9251,lng:139.4850,d:"Rue d'entrepôts en argile (kura), tour de la cloche et ruelle des confiseries : un saut dans l'époque d'Edo."},
   {n:"Naritasan Shinsho-ji",cat:"temple",r:"Narita, Chiba",lat:35.7860,lng:140.3180,d:"Vaste complexe de temples et de jardins, halte sereine à deux pas de l'aéroport."},
   {n:"Hitachi Seaside Park",cat:"nature",icon:"🌸",r:"Hitachinaka, Ibaraki",lat:36.4017,lng:140.5930,d:"Collines fleuries à perte de vue ; en automne, les kochia s'embrasent d'un rouge éclatant."},
-  {n:"Ishioka Matsuri",cat:"festival",r:"Ishioka, Ibaraki",lat:36.1910,lng:140.2870,d:"Grand festival d'automne près de Tokyo : chars, danses, sumo et stands gourmands durant trois jours.",date:"Week-end avant le 3ᵉ lundi de septembre",src:SILVER},
+  {n:"Ishioka Matsuri",cat:"festival",r:"Ishioka, Ibaraki",lat:36.1910,lng:140.2870,d:"Grand festival d'automne près de Tokyo : chars, danses, sumo et stands gourmands durant trois jours.",date:"Week-end avant le 3ᵉ lundi de septembre",sepWhy:"Calé sur le week-end du Keiro no Hi (jour férié dédié aux personnes âgées, 3ᵉ lundi de septembre), pensé pour profiter du long week-end automnal.",src:SILVER},
   {n:"Grand Bouddha de Kamakura",cat:"temple",icon:"🧘",r:"Kamakura, Kanagawa",lat:35.3168,lng:139.5358,d:"Le Daibutsu de bronze, haut de 13 m, médite en plein air depuis le XIIIᵉ siècle."},
   {n:"Hokoku-ji",cat:"temple",icon:"🎋",r:"Kamakura, Kanagawa",lat:35.3175,lng:139.5640,d:"Le « temple aux bambous » et son jardin de bambous géants où l'on sirote un matcha au calme."},
   {n:"Chinatown de Yokohama",cat:"food",icon:"🥟",r:"Yokohama, Kanagawa",lat:35.4437,lng:139.6450,d:"Le plus grand quartier chinois du Japon : raviolis vapeur, lanternes et ruelles gourmandes."},
@@ -662,7 +664,7 @@ const PLACES = [
   {n:"Inami (sculpture sur bois)",cat:"monument",icon:"🪵",r:"Nanto, Toyama",lat:36.5460,lng:136.9760,d:"Village d'artisans réputé dans tout le Japon pour ses sculptures sur bois d'une finesse rare."},
   {n:"Gokayama",cat:"monument",icon:"🏘️",r:"Nanto, Toyama",lat:36.4150,lng:136.9300,d:"Hameaux de chaumières gassho-zukuri encore plus paisibles que Shirakawa-go. (UNESCO)",src:VILLAGES},
   {n:"Route alpine Tateyama-Kurobe",cat:"nature",icon:"🏔️",r:"Tateyama, Toyama",lat:36.5770,lng:137.5970,d:"Traversée spectaculaire des Alpes du Nord, entre sommets, barrage géant et plateaux d'altitude."},
-  {n:"Owara Kaze no Bon",cat:"festival",r:"Yatsuo, Toyama",lat:36.5640,lng:137.1340,d:"À Yatsuo, des danses d'une grâce envoûtante au son du kokyu pour apaiser le vent avant la récolte.",date:"1 – 3 septembre",src:SILVER},
+  {n:"Owara Kaze no Bon",cat:"festival",r:"Yatsuo, Toyama",lat:36.5640,lng:137.1340,d:"À Yatsuo, des danses d'une grâce envoûtante au son du kokyu pour apaiser le vent avant la récolte.",date:"1 – 3 septembre",sepWhy:"Se tient volontairement tout début septembre, juste avant la récolte du riz, pour apaiser les vents de la saison des typhons avant qu'ils ne couchent les cultures.",src:SILVER},
   {n:"Jardin Kenroku-en",cat:"nature",icon:"🌸",r:"Kanazawa, Ishikawa",lat:36.5620,lng:136.6624,d:"L'un des trois plus beaux jardins du Japon : étangs, ponts et lanternes, sublime en toute saison.",src:MAP},
   {n:"Quartier Higashi Chaya",cat:"monument",icon:"👘",r:"Kanazawa, Ishikawa",lat:36.5720,lng:136.6660,d:"Ruelles préservées de maisons de thé dorées à l'or fin : l'élégance d'un Kanazawa d'antan."},
   {n:"Marché Omicho",cat:"food",icon:"🦀",r:"Kanazawa, Ishikawa",lat:36.5710,lng:136.6570,d:"Le ventre de Kanazawa : crabes, oursins et bols de fruits de mer d'une fraîcheur folle."},
@@ -689,6 +691,8 @@ const PLACES = [
   {n:"Amanohashidate",cat:"nature",icon:"🌅",r:"Miyazu, Kyoto",lat:35.5680,lng:135.1940,d:"Longue flèche de sable plantée de pins, l'une des trois plus belles vues du Japon.",tip:"À regarder tête en bas, selon la tradition !",src:VILLAGES},
   {n:"Ine no Funaya",cat:"monument",icon:"🏘️",r:"Ine, Kyoto",lat:35.6760,lng:135.2870,d:"Village de pêcheurs aux maisons-bateaux (funaya) posées sur l'eau, d'un charme rare.",src:VILLAGES},
   {n:"Miyama Kayabuki no Sato",cat:"monument",icon:"🏘️",r:"Nantan, Kyoto",lat:35.3160,lng:135.6390,d:"Hameau de chaumières au cœur des montagnes, campagne japonaise dans toute sa douceur.",src:VILLAGES},
+  {n:"Choyo-sai (fête des chrysanthèmes)",cat:"festival",r:"Sanctuaire Kamigamo, Kyoto",lat:35.0601,lng:135.7472,d:"Rite shinto où des prêtres offrent des chrysanthèmes à la divinité du sanctuaire, combats de sumo enfantins pour la divertir, marché aux pinceaux traditionnels.",date:"9 septembre",sepWhy:"Le 9 septembre correspond très exactement à Choyo no Sekku, l'une des cinq fêtes saisonnières traditionnelles du Japon, dédiée au chrysanthème qui ne fleurit qu'à cette période de l'année.",src:SEP},
+  {n:"Tsukimi no Yube (contemplation de la lune)",cat:"festival",r:"Daikaku-ji, Kyoto",lat:35.0298,lng:135.6775,d:"L'un des sites les plus célèbres du Japon pour Tsukimi : le reflet de la pleine lune sur l'étang Osawa, comme l'admiraient déjà les aristocrates de la cour de Heian.",date:"Autour du 25 septembre (Jugoya, pleine lune de mi-automne)",sepWhy:"La nuit de Jugoya (pleine lune de mi-automne) tombe le 25 septembre 2026 — la nuit de l'année où le ciel japonais est réputé le plus dégagé pour observer la lune, juste avant les récoltes.",src:SEP},
 
   /* ---------- NARA ---------- */
   {n:"Todai-ji",cat:"temple",r:"Nara",lat:34.6889,lng:135.8398,d:"Abrite un Grand Bouddha de bronze de 15 m dans l'un des plus grands bâtiments en bois du monde."},
@@ -701,7 +705,7 @@ const PLACES = [
   {n:"Dotonbori",cat:"food",icon:"🐙",r:"Namba, Osaka",lat:34.6687,lng:135.5012,d:"Le cœur néon d'Osaka : takoyaki, panneaux géants et le célèbre Glico. Paradis du street food."},
   {n:"Marché Kuromon Ichiba",cat:"food",icon:"🍣",r:"Nipponbashi, Osaka",lat:34.6660,lng:135.5060,d:"Marché couvert gourmand : fruits de mer grillés, wagyu et sushis à grignoter sur le pouce."},
   {n:"Shinsekai",cat:"food",icon:"🍢",r:"Naniwa, Osaka",lat:34.6525,lng:135.5063,d:"Quartier rétro dominé par la tour Tsutenkaku, royaume des brochettes frites kushikatsu."},
-  {n:"Kishiwada Danjiri",cat:"festival",r:"Kishiwada, Osaka",lat:34.4598,lng:135.3713,d:"Depuis 1703, 35 chars massifs lancés à toute vitesse dans les rues : aussi grisant que spectaculaire.",date:"Week-end avant le 3ᵉ lundi de septembre",src:SILVER},
+  {n:"Kishiwada Danjiri",cat:"festival",r:"Kishiwada, Osaka",lat:34.4598,lng:135.3713,d:"Depuis 1703, 35 chars massifs lancés à toute vitesse dans les rues : aussi grisant que spectaculaire.",date:"Week-end avant le 3ᵉ lundi de septembre",sepWhy:"Programmé sur le week-end du Keiro no Hi, quand les grosses chaleurs d'Osaka commencent tout juste à retomber — un soulagement pour l'effort intense demandé par les chars.",src:SILVER},
   {n:"Château de Himeji",cat:"monument",icon:"🏯",r:"Himeji, Hyogo",lat:34.8394,lng:134.6939,d:"Le « Héron blanc », plus beau château féodal du Japon, d'une blancheur éclatante. (UNESCO)"},
   {n:"Arima Onsen",cat:"onsen",r:"Kobe, Hyogo",lat:34.7980,lng:135.2480,d:"L'un des plus vieux villages thermaux du Japon, aux eaux dorées, à deux pas de Kobe.",src:VONSEN},
   {n:"Kobe & bœuf",cat:"food",icon:"🐄",r:"Kobe, Hyogo",lat:34.6900,lng:135.1956,d:"Port cosmopolite et patrie du légendaire bœuf de Kobe, fondant à souhait au teppanyaki."},
@@ -741,6 +745,7 @@ const PLACES = [
   {n:"Udon sanuki",cat:"food",icon:"🍜",r:"Kagawa",lat:34.3400,lng:133.9100,d:"Le royaume de l'udon : des nouilles épaisses et nerveuses, fierté absolue de la préfecture."},
   {n:"Dogo Onsen",cat:"onsen",r:"Matsuyama, Ehime",lat:33.8520,lng:132.7860,d:"L'un des plus anciens onsen du Japon, dont le bâtiment aurait inspiré Le Voyage de Chihiro.",src:VONSEN},
   {n:"Château de Matsuyama",cat:"monument",icon:"🏯",r:"Matsuyama, Ehime",lat:33.8458,lng:132.7657,d:"Beau donjon d'origine sur sa colline, accessible par un téléphérique panoramique."},
+  {n:"Yokaichi Machinami Kangetsukai",cat:"festival",r:"Uchiko, Ehime",lat:33.5533,lng:132.6533,d:"Festival des lanternes en bambou et papier fabriquées à la main, accrochées aux avant-toits des maisons du bourg historique. Concerts de koto et dégustation de tsukimi dango.",date:"Mi-septembre (Tsukimi)",sepWhy:"Organisé pour Tsukimi à la mi-septembre, quand les nuits sont enfin fraîches et claires après l'humidité de l'été — idéal pour flâner dehors à la lueur des lanternes.",src:SEP},
   {n:"Château de Kochi",cat:"monument",icon:"🏯",r:"Kochi",lat:33.5670,lng:133.5310,d:"L'un des rares châteaux dont donjon et palais d'origine subsistent ensemble."},
   {n:"Rivière Shimanto",cat:"nature",icon:"🏞️",r:"Kochi",lat:33.2010,lng:132.9870,d:"« La dernière rivière claire du Japon » et ses ponts submersibles, idéale en canoë."},
 
@@ -16580,6 +16585,7 @@ function openDetail(p, m){
   html += `<p class="d-desc">${p.d}</p>`;
   html += `<div class="d-note addr"><span class="ic">📮</span><span class="addr-text">${destText}</span><button class="addr-copy" title="Copier l'adresse" onclick="copyDetailAddress(event)">⧉</button></div>`;
   if(p.date) html += `<div class="d-note date"><span class="ic">🗓️</span><span>${p.date}</span></div>`;
+  if(p.sepWhy) html += `<div class="d-note sepwhy"><span class="ic">🍂</span><span>${p.sepWhy}</span></div>`;
   if(p.tip) html += `<div class="d-note tip"><span class="ic">💡</span><span>${p.tip}</span></div>`;
   html += `<div class="d-actions">`;
   html += `<button class="go" onclick="window.open('${gmaps}','_blank','noopener')">🧭 Y aller</button>`;
