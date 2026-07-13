@@ -437,10 +437,10 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
 <header class="header">
   <div class="brand">
     <div class="names"><span class="pet">✿</span> Marine &amp; Arnaud</div>
-    <div class="sub">Lune de miel · Japon · Sept. 2026</div>
+    <div class="sub">Lune de miel · Japon · Sept.–Oct. 2026</div>
   </div>
   <div class="htools">
-    <button class="btn" id="septBtn" title="Recentrer sur septembre"><span class="ic">🍁</span><span class="lbl">Septembre</span></button>
+    <button class="btn" id="septBtn" title="Filtrer sur les temps forts du séjour (sept.–oct.)"><span class="ic">🍁</span><span class="lbl">Sept.–Oct.</span></button>
     <button class="btn" id="shinkBtn" title="Afficher les lignes de Shinkansen"><span class="ic">🚄</span><span class="lbl">Shinkansen</span></button>
     <button class="btn" id="satBtn" title="Basculer en vue satellite"><span class="ic">🛰️</span><span class="lbl">Satellite</span></button>
     <button class="btn" id="favBtn" title="Mes favoris &amp; itinéraire"><span class="ic">❤</span><span class="lbl">Favoris</span><span class="fav-count" id="favCount"></span></button>
@@ -505,14 +505,14 @@ body{font-family:var(--sans);color:var(--ink);background:var(--cream);overflow:h
     <div class="crest">✿ ❀ ✿</div>
     <h1>Marine &amp; Arnaud</h1>
     <div class="tag">votre voyage de noces au Japon</div>
-    <div class="when">Septembre 2026</div>
-    <p class="intro">Pour célébrer votre union, voici une carte de pépites à travers tout l'archipel — des temples millénaires aux ruelles gourmandes, des onsen secrets aux festivals d'automne. Choisissez les catégories qui vous tentent, explorez région par région, et activez le bouton <b>🍁&nbsp;Septembre</b> pour les coups de cœur de la saison. Touchez le <b>❤</b> sur un lieu pour le garder en favori et composer votre <b>itinéraire</b>, et affichez les lignes de <b>🚄&nbsp;Shinkansen</b> d'un simple geste.</p>
+    <div class="when">Septembre – Octobre 2026</div>
+    <p class="intro">Pour célébrer votre union, voici une carte de pépites à travers tout l'archipel — des temples millénaires aux ruelles gourmandes, des onsen secrets aux festivals d'automne. Choisissez les catégories qui vous tentent, explorez région par région, et activez le bouton <b>🍁&nbsp;Sept.–Oct.</b> pour les coups de cœur de la saison. Touchez le <b>❤</b> sur un lieu pour le garder en favori et composer votre <b>itinéraire</b>, et affichez les lignes de <b>🚄&nbsp;Shinkansen</b> d'un simple geste.</p>
     <div class="dedication">
       <div class="lbl">💌 Un mot pour vous</div>
       <p>Les amis, je vous présente une nouvelle fois toutes mes félicitations pour votre mariage, et mes remerciements pour ce merveilleux moment que vous nous avez fait vivre. Ceci est un petit présent personnalisé qui j'espère vous sera utile, ou qui au moins j'espère vous aura fait sourire&nbsp;! Gros bisous à vous deux.</p>
       <div class="sign">— Nicolas&nbsp;MARSAN</div>
     </div>
-    <div class="season"><b>🍁 Le Japon en septembre</b> — Douce transition entre l'été et l'automne&nbsp;: températures plus clémentes, moins de monde, saison du <i>kabocha</i> (potimarron) et des <i>ohagi</i> de l'équinoxe. Les matsuri d'automne battent leur plein… et quelques typhons rôdent, gardez un œil sur la météo&nbsp;!</div>
+    <div class="season"><b>🍁 Le Japon en septembre-octobre</b> — Douce transition entre l'été et l'automne&nbsp;: températures plus clémentes, moins de monde, saison du <i>kabocha</i> (potimarron) et des <i>ohagi</i> de l'équinoxe. Les matsuri d'automne battent leur plein, les premières couleurs apparaissent dans les Alpes japonaises et à Hokkaido… et quelques typhons rôdent encore début septembre, gardez un œil sur la météo&nbsp;!</div>
     <div class="credit">Sélection inspirée d'<a href="https://ichiban-japan.com/jipangu/" target="_blank" rel="noopener">Ichiban Japan</a>, de son livre <i>72 saisons du Japon</i> et de ses classements (villages onsen, villages historiques, ryokans…).</div>
     <button class="start" id="startBtn">Commencer l'exploration&nbsp;✿</button>
   </div>
@@ -530,7 +530,7 @@ const CATS = {
   onsen:    {label:"Onsen & bains",         short:"Onsen",      emoji:"♨️", color:"#00A6CB"},
   ryokan:   {label:"Ryokans & séjour",      short:"Ryokans",    emoji:"🏨", color:"#7B2CBF"},
   nature:   {label:"Nature & jardins",      short:"Nature",     emoji:"🌸", color:"#2D936C"},
-  festival: {label:"Festivals de septembre",short:"Festivals",  emoji:"🏮", color:"#FF477E"}
+  festival: {label:"Festivals",short:"Festivals",  emoji:"🏮", color:"#FF477E"}
 };
 
 const SEP="https://ichiban-japan.com/le-japon-en-septembre/";
@@ -555,12 +555,12 @@ function categorize(title){
   return 'monument';
 }
 
-/* ===================== Détection « Septembre » ===================== */
-function isSeptemberItem(p){
-  if(p.curated) return true;          // la sélection d'origine a été pensée pour septembre
+/* ===================== Détection « pertinent pour le séjour » ===================== */
+function isSeasonItem(p){
+  if(p.curated) return true;          // la sélection d'origine a été pensée pour ce séjour (sept.–oct.)
   if(p.date) return true;             // festivals datés
   const t = ((p.d||"")+" "+(p.n||"")).toLowerCase();
-  return /septembre|équinoxe|equinoxe|silver week|higanbana|cosmos|kochia|ohagi|kabocha/.test(t);
+  return /septembre|octobre|équinoxe|equinoxe|silver week|higanbana|cosmos|kochia|ohagi|kabocha|koyo|momiji|kunchi/.test(t);
 }
 
 /* ===================== Tracé du Japon (fond de secours vectoriel) ===================== */
@@ -659,6 +659,7 @@ const PLACES = [
   {n:"Tsumago-juku",cat:"monument",icon:"🏘️",r:"Nagiso, Nagano",lat:35.5780,lng:137.5950,d:"Village figé à l'époque d'Edo ; la balade Magome–Tsumago plonge dans le Japon d'autrefois.",src:VILLAGES},
   {n:"Magome-juku",cat:"monument",icon:"🏘️",r:"Nakatsugawa, Gifu",lat:35.5770,lng:137.5680,d:"Ancien relais aux ruelles pavées en pente, avec de belles vues sur la vallée du Kiso.",src:VILLAGES},
   {n:"Takayama (vieille ville)",cat:"monument",icon:"🏘️",r:"Takayama, Gifu",lat:36.1408,lng:137.2530,d:"Ruelles d'Edo merveilleusement conservées dans les Alpes, brasseries de saké et charme intemporel.",src:MAP},
+  {n:"Festival d'automne de Takayama",cat:"festival",r:"Sanctuaire Sakurayama Hachimangu, Takayama, Gifu",lat:36.1493,lng:137.2513,d:"L'un des plus beaux matsuri du Japon : une douzaine de yatai (chars) richement sculptés et dorés, certains animés par des marionnettes karakuri, puis une procession nocturne aux lanternes dans la vieille ville.",date:"9 – 10 octobre",sepWhy:"Se tient chaque année début octobre, quand les Alpes japonaises commencent tout juste à se parer de leurs premières couleurs d'automne et que le climat de montagne devient particulièrement agréable (5-15°C).",src:MAP},
   {n:"Shirakawa-go",cat:"monument",icon:"🏘️",r:"Ono, Gifu",lat:36.2578,lng:136.9063,d:"Village classé UNESCO aux maisons gassho-zukuri aux toits de chaume, hors du temps au pied des montagnes.",src:VILLAGES},
   {n:"Gero Onsen",cat:"onsen",r:"Gero, Gifu",lat:35.8050,lng:137.2440,d:"L'un des trois grands onsen du Japon, parsemé de bains de pieds gratuits dans toute la ville.",src:VONSEN},
   {n:"Inami (sculpture sur bois)",cat:"monument",icon:"🪵",r:"Nanto, Toyama",lat:36.5460,lng:136.9760,d:"Village d'artisans réputé dans tout le Japon pour ses sculptures sur bois d'une finesse rare."},
@@ -754,6 +755,7 @@ const PLACES = [
   {n:"Yatai & ramen de Hakata",cat:"food",icon:"🍜",r:"Fukuoka",lat:33.5930,lng:130.4017,d:"Les fameuses échoppes de rue (yatai) et le ramen tonkotsu de Hakata, au bouillon de porc onctueux."},
   {n:"Yutoku Inari",cat:"temple",r:"Kashima, Saga",lat:33.0490,lng:130.0930,d:"Spectaculaire sanctuaire vermillon bâti à flanc de colline, l'un des trois grands Inari du Japon."},
   {n:"Nagasaki (parc de la Paix)",cat:"monument",icon:"🕊️",r:"Nagasaki",lat:32.7448,lng:129.8737,d:"Ville-port à l'histoire singulière : mémorial de la paix, jardin Glover et influences européennes."},
+  {n:"Nagasaki Kunchi",cat:"festival",r:"Sanctuaire Suwa, Nagasaki",lat:32.7530,lng:129.8790,d:"L'un des plus originaux matsuri du Japon, reflet de l'histoire cosmopolite de Nagasaki (seul port ouvert sur l'étranger pendant l'isolement du pays) : dragons dansants d'inspiration chinoise, chars-bateaux évoquant les navires hollandais.",date:"7 – 9 octobre",sepWhy:"Fête traditionnelle de l'automne (« kunchi » signifie justement fête d'automne en dialecte du nord de Kyushu) qui célèbre chaque année début octobre les récoltes et le patrimoine multiculturel de la ville.",src:MAP},
   {n:"Unzen Onsen",cat:"onsen",r:"Unzen, Nagasaki",lat:32.7340,lng:130.2620,d:"Station thermale de montagne aux « enfers » bouillonnants et fumerolles soufrées.",src:VONSEN},
   {n:"Château de Kumamoto",cat:"monument",icon:"🏯",r:"Kumamoto",lat:32.8060,lng:130.7060,d:"Imposante forteresse aux murs noirs courbes, magnifiquement restaurée."},
   {n:"Kurokawa Onsen",cat:"onsen",r:"Minamioguni, Kumamoto",lat:33.0790,lng:131.1430,d:"Village thermal blotti dans une gorge boisée, au charme rustique très prisé. Sublime en automne.",src:VONSEN},
@@ -16282,7 +16284,7 @@ function near(aLat,aLng,bLat,bLng){
 }
 
 function buildAllPlaces(rawSpots){
-  const all = PLACES.map(p => { const q = {...p, curated:true}; q.sep = isSeptemberItem(q); return q; });
+  const all = PLACES.map(p => { const q = {...p, curated:true}; q.sep = isSeasonItem(q); return q; });
   let added = 0;
   for(const s of rawSpots){
     if(!s || !s.gps) continue;
@@ -16299,7 +16301,7 @@ function buildAllPlaces(rawSpots){
       d: s.description || '',
       src: s.url || ''
     };
-    q.sep = isSeptemberItem(q);
+    q.sep = isSeasonItem(q);
     all.push(q);
     added++;
   }
@@ -16440,7 +16442,7 @@ function refreshMarkers(){
 
 function updateCount(n){
   const el = document.getElementById('menuCount');
-  const suffix = favOnly ? ' · favoris uniquement ❤' : (septOnly ? ' · mode septembre 🍁' : '');
+  const suffix = favOnly ? ' · favoris uniquement ❤' : (septOnly ? ' · sept.–oct. 🍁' : '');
   if(el) el.textContent = (n!=null?n:'…') + ' lieu' + ((n||0)>1?'x':'') + ' affiché' + ((n||0)>1?'s':'') + suffix;
 }
 
@@ -16528,7 +16530,7 @@ function setupFilterToggle(){
   scrim.onclick = close;
 }
 
-/* ===================== Bouton Septembre ===================== */
+/* ===================== Bouton Sept.–Oct. ===================== */
 function setupSept(){
   const b = document.getElementById('septBtn');
   b.onclick = () => {
@@ -16579,7 +16581,7 @@ function openDetail(p, m){
   const gmaps = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destText)}`;
 
   let html = `<span class="d-badge" style="background:${cat.color}">${p.icon||cat.emoji} ${cat.label}</span>`;
-  if(p.sep && (p.date || p.curated)) html += `<span class="d-sep">🍁 Septembre</span>`;
+  if(p.sep && (p.date || p.curated)) html += `<span class="d-sep">🍁 Sept.–Oct.</span>`;
   html += `<div class="d-region">📍 ${p.r}</div>`;
   html += `<h2 class="d-title">${p.n}</h2>`;
   html += `<p class="d-desc">${p.d}</p>`;
